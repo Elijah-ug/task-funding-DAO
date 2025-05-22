@@ -18,7 +18,6 @@ const WalletProvider = ({children}) => {
             }
         }
         initWallet()
-        console.log("Children: ", children)
     }, [dispatch])
 
     return ( <div> { children } </div> );

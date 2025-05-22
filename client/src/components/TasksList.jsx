@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../hooks/useRedux';
 import { fetchTasks, markTaskAsComplete, rewardTasks } from '../features/tasks/taskThunk';
 import ConnectWallet from './ConnectWallet';
 import WalletProvider from './WalletProvider';
+import RewardsInfo from './RewardsInfo';
 
 const TasksList = () => {
   const dispatch = useAppDispatch();
@@ -11,7 +12,7 @@ const TasksList = () => {
     const DAO_OWNER = import.meta.env.VITE_DAO_OWNER;
     console.log("address ", address)
     console.log("DAO_OWNER ", DAO_OWNER)
-
+    console.log("Match?", address?.toLowerCase(), DAO_OWNER?.toLowerCase());
     useEffect(() => {
         if (address) {
             dispatch(fetchTasks());
@@ -33,12 +34,13 @@ const TasksList = () => {
       <p className="text-green-500 font-bold text-lg mb-4">Task List</p>
       <div className="space-y-4">
         {tasks.map((task) => (
-          <div key={task.id} className="border p-4 rounded shadow bg-white">
+            <div key={task.id} className="border p-4 rounded shadow bg-white">
+               {!task.isPaid && <RewardsInfo taskId={task.id}/>}
             <p><strong>Description:</strong> {task.description}</p>
             <p><strong>Assigned to:</strong> {task.assignedTo}</p>
             <p><strong>Reward:</strong> {task.reward}</p>
-            <p><strong>Completed:</strong> {task.isCompleted ? "✅" : "❌"}</p>
-            <p><strong>Paid:</strong> {task.isPaid ? "✅" : "❌"}</p>
+            <p><strong>Completed Status:</strong> {task.isCompleted ? "✅" : "Incoplete"}</p>
+            <p><strong>Paid Status:</strong> {task.isPaid ? "✅" : "Unpaid"}</p>
             <div className="mt-2 space-x-2">
               { address.toLowerCase() === task.assignedTo.toLowerCase() && !task.isCompleted && (
                 <button

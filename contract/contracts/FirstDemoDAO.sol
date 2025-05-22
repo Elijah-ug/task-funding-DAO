@@ -14,6 +14,9 @@ contract FirstDemoDAO{
     uint256 public taskCount;
     mapping(uint256 => Task) public tasks;
     mapping(address => uint256[]) public tasksByUser;
+    mapping(uint256 => uint256) public doerRewards;
+    mapping(uint256 => uint256) public daoRewards;
+
 
     modifier onlyOwner(){
         require(msg.sender == owner, "Not owner");
@@ -22,10 +25,16 @@ contract FirstDemoDAO{
     event TaskCreated(uint256 taskId, address assignedTo, uint256 reward);
     event TaskCompleted(uint256 taskId);
     event TaskRewarded(uint256 taskId, address to, uint256 amount);
+    event TaskRewarded(uint256 taskId, address to, uint256 doerAmount, uint256 daoAmount);
 
-    constructor(address _token){
-        token = FirstDemoToken(_token);
+
+    constructor(){
         owner = msg.sender;
+    }
+
+    function setToken(address _token) external onlyOwner(){
+        require(address(token) == address(0), "Token alredy set");
+        token = FirstDemoToken(_token);
     }
 
     function createTask(string calldata _description, address _assignedTo, uint256 _reward) external onlyOwner{
@@ -48,8 +57,18 @@ contract FirstDemoDAO{
         require(task.isCompleted, "Task not yet completed");
         require(!task.isPaid, "Already paid");
         task.isPaid = true;
-        token.mint(task.assignedTo, task.reward);
-        emit TaskRewarded(taskId, msg.sender, task.reward);
+        //split rewards
+        uint256 rewardToDoer = (task.reward * 40) / 100;
+        uint256 rewardToDAO = task.reward - rewardToDoer;
+        // save on chain
+        doerRewards[taskId] = rewardToDoer;
+        daoRewards[taskId] = rewardToDAO;
+        //reward
+        token.mint(task.assignedTo, rewardToDoer);
+        token.mint(owner, rewardToDAO);
+        emit TaskRewarded(taskId, task.assignedTo, rewardToDoer);
+        emit TaskRewarded(taskId, task.assignedTo, rewardToDoer, rewardToDAO);
+
     }
     //get all users' tasks
     function getAllTasksOfTheUser(address user) public view returns(Task[] memory){
@@ -59,5 +78,9 @@ contract FirstDemoDAO{
             results[i] = tasks[ids[i]];
         }
         return results;
+    }
+    //======get rewards function
+    function getRewardSplits(uint256 taskId) public view returns(uint256 doerAmount, uint256 daoAmount){
+        return (doerRewards[taskId], daoRewards[taskId]);
     }
 }

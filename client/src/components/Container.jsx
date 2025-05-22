@@ -10,7 +10,7 @@ const Container = () => {
             <ConnectWallet />
             <TaskForm />
             <TasksList />
-            {/* <WalletProvider/> */}
+            <WalletProvider/>
         </div>
     );
 }
